@@ -1,0 +1,451 @@
+//File name:
+
+//Names : Habiba ayman hamed, Mai hassan awad, Maria Alfons Kamel
+//IDs : 20220103 , 20221172 , 20220265
+//Emails : Habibaayman100205@gmail.com , maih5413@gmail.com , mariaalfonse206@gmail.com
+
+#include <iostream>
+#include <fstream>
+#include <cstring>
+#include <cmath>
+#include "bmplib.cpp"
+
+using namespace std;
+unsigned char RGB_image[SIZE][SIZE][RGB];
+
+bool loadImage ();
+void saveImage ();
+bool doSomethingForImage ();
+void BW();
+void flip();
+bool merge();
+void Rotate_Image();
+void Invert();
+void Darken_Lighten();
+void shrink();
+void detect();
+void Blur();
+
+int main()
+{
+    // to check if the photo's name right else returns to the while loop in the int main
+    while(loadImage()){
+        loadImage();
+    }
+    bool state = 1;
+    while(state){
+        if(doSomethingForImage()) {
+            state = 0;
+        }
+    }
+    return 0;
+}
+
+// returns 0 if the image's name is correct else returns 1
+bool loadImage () {
+    char imageFileName[100];
+    //determine whether we will edit a colored image or a gray scale
+    cout<<"Welcome dear user :)\n";
+
+    cout <<"Enter the source image file name: ";
+    cin >> imageFileName;
+
+    // to form the whole path
+    strcat (imageFileName, ".bmp");
+
+    // this returns 1 if the name is wrong else returns 0
+    return readRGBBMP(imageFileName, RGB_image);
+}
+
+//_________________________________________
+void saveImage () {
+    char imageFileName[100];
+
+    // Get gray scale image target file name
+    cout << "Enter the target image file name: ";
+    cin >> imageFileName;
+    // Add to it .bmp extension and load image
+    strcat(imageFileName, ".bmp");
+    writeRGBBMP(imageFileName, RGB_image);
+}
+
+//_________________________________________
+
+// returns 1 if any error happens in the filters
+bool doSomethingForImage() {
+    //print the list to the user
+    cout<<"Please enter the index of the selected filter to apply or 0 to exit: ""1-\tBlack & White Filter\n"
+          "2-\tInvert Filter\n"
+          "3-\tMerge Filter \n"
+          "4-\tFlip Image\n"
+          "5-\tRotate Image\n"
+          "6-\tDarken and Lighten Image\n"
+          "7-\tDetect Image Edges \n"
+          "8-\tEnlarge Image\n"
+          "9-\tShrink Image\n"
+          "a-\tMirror 1/2 Image\n"
+          "b-\tShuffle Image\n"
+          "c-\tBlur Image\n"
+          "d-\tCrop Image\n"
+          "e-\tSkew Image Right  \n"
+          "f-\tSkew Image Up  \n"
+          "s-\tSave the image to a file\n"
+          "0-\tExit \n";
+    //get the user choice and redirects it to do the filter required
+    char choose; cin>>choose;
+    if(choose == '1'){
+        BW();
+    }else if(choose == '2') {
+        Invert();
+    }else if(choose == '3'){
+        //returns 1 if the second image's name is wrong
+        if(merge()) return false ;
+    }else if(choose == '4'){
+        flip();
+    }else if(choose == '5') {
+        Rotate_Image();
+    }else if(choose == '6'){
+        Darken_Lighten();
+    }
+    else if(choose == '7'){
+        detect();
+    }
+    else if(choose == '8'){}
+    else if(choose == '9'){
+        shrink();
+    }
+    else if(choose == 'a'){}
+    else if(choose == 'b'){}
+    else if(choose == 'c'){
+        Blur();
+        Blur();
+        Blur();
+        Blur();
+    }
+    else if(choose == 'd'){}
+    else if(choose == 'e'){}
+    else if(choose == 'f'){}
+    else if(choose == 's'){
+        saveImage();
+    }
+    else if(choose == '0'){
+        return 1;
+    }
+    return 0;
+}
+void BW() {
+    for (int i = 0; i < SIZE; i++) {
+        for (int j = 0; j < SIZE; j++) {
+            //get the average of the three pixels(RGB) so if it's greater than 127 that's mean it has light colour so turn it to white
+            if ((RGB_image[i][j][0] + RGB_image[i][j][1] + RGB_image[i][j][2]) / 3 > 127) {
+                RGB_image[i][j][0] = 255;
+                RGB_image[i][j][1] = 255;
+                RGB_image[i][j][2] = 255;
+
+            } else {
+                //else it has a dark color so turn it to black
+                RGB_image[i][j][0] = 0;
+                RGB_image[i][j][1] = 0;
+                RGB_image[i][j][2] = 0;
+            }
+        }
+    }
+}
+
+void Invert(){
+    for (int i = 0; i < RGB; ++i) {
+        for (int j = 0; j < SIZE; ++j) {
+            for (int k = 0; k < SIZE; ++k) {
+                //inverting each colour of each pixel by subtracting its value from 255
+                RGB_image[j][k][i] = 255 - RGB_image[j][k][i];
+            }
+        }
+    }
+}
+
+
+//this function returns 0 if there is no error else it returns 1 to terminates the program
+bool merge(){
+    // gets the second image's name
+    cout<<"Please enter name of image file to merge with: ";
+    char imageFileName[100];
+    cin >> imageFileName;
+
+    //reads the second image
+    unsigned char image1[SIZE][SIZE][RGB];
+    strcat(imageFileName, ".bmp");
+
+    // returns 1 if the name is wrong else continues the function
+    if(readRGBBMP(imageFileName, image1)) return 1;
+
+    // this for loop gets the average of each color in the two pixels which are in the same position from the two images
+    for(int y=0 ; y<RGB ; y++) {
+        for (int i = 0; i < SIZE; i++) {
+            for (int j = 0; j < SIZE; j++) {
+                RGB_image[i][j][y] = (RGB_image[i][j][y] + image1[i][j][y]) / 2;
+            }
+        }
+    }
+    return 0;
+}
+void flip() {
+    cout << "flip (h)orizotally or (v)ertically ?: ";
+    char c;
+    cin >> c;
+    if (c == 'h') {
+        for (int y = 0; y < 3; y++) {
+            for (int i = 0; i < SIZE; i++) {
+                for (int j = 0; j < SIZE / 2; j++) {
+                    int image2 = RGB_image[i][j][y];
+                    //swapping each RGB pixel with the opposite one in the same row
+                    RGB_image[i][j][y] = RGB_image[i][256 - j][y];
+                    RGB_image[i][256-j][y] = image2;
+                }
+            }
+        }
+    } else {
+        for (int y = 0; y < 3; y++) {
+            for (int i = 0; i < SIZE / 2; i++) {
+                for (int j = 0; j < SIZE; j++) {
+                    int image2 = RGB_image[i][j][y];
+                    //swapping each RGB pixel with the opposite one in the same column
+                    RGB_image[i][j][y] = RGB_image[256 - i][j][y];
+                    RGB_image[256 - i][j][y] = image2;
+                }
+            }
+        }
+
+    }
+}
+void Rotate_Image(){
+    int degree;
+    cout<<"rotate 90 , 180 or 270 degrees:";
+    cin>>degree;
+    unsigned char RGB_image2[SIZE][SIZE][RGB];
+    unsigned char RGB_image3[SIZE][SIZE][RGB];
+    if (degree == 90) {
+        for (int i = 0; i < RGB; ++i) {
+            for (int j = 0; j < SIZE; ++j) {
+                for (int k = 0; k < SIZE; ++k) {
+                    // iterates over each pixel of the image and assigns
+                    // the value of the corresponding pixel in the new image.
+                    RGB_image2[j][k][i] = RGB_image[SIZE - k - 1][j][i];
+                }
+            }
+        }
+        for (int i = 0; i < RGB; ++i) {
+            for (int j = 0; j < SIZE; ++j) {
+                for (int k = 0; k < SIZE; ++k) {
+                    //copying the new image to the original one
+                    RGB_image[j][k][i] = RGB_image2[j][k][i];
+                }
+            }
+        }
+    } else if (degree == 180) {
+        for (int i = RGB - 1; i >= 0; --i) {
+            for (int j = SIZE - 1; j >= 0; --j) {
+                for (int k = SIZE-1; k >=0 ; --k) {
+                    //making the rotated image start from last pixel of the original one
+                    RGB_image2[255 - j][255 - k][i] = RGB_image[j][k][i];
+                }
+            }
+        }
+        for (int i = 0; i < RGB; ++i) {
+            for (int j = 0; j < SIZE; ++j) {
+                for (int k = 0; k < SIZE; ++k) {
+                    //copying the new image to the original one
+                    RGB_image[j][k][i] = RGB_image2[j][k][i];
+                }
+            }
+        }
+    } else {
+        for (int i = 0; i < RGB; ++i) {
+            for (int j = 0; j < SIZE; ++j) {
+                for (int k = 0; k < SIZE; ++k) {
+                    // iterates over each pixel of the image and assigns
+                    // the value of the corresponding pixel in the new image.
+                    RGB_image2[j][k][i] = RGB_image[256 - k][256 - j][i];
+                }
+            }
+        }
+        for (int i = 0; i < 3; ++i) {
+            for (int j = 0; j < SIZE; ++j) {
+                for (int k = 0; k < SIZE/2; ++k) {
+                    //then flipping the image horizontally so it's rotated 270 degree
+                    RGB_image3[j][k][i] = RGB_image2[j][k][i];
+                    RGB_image2[j][k][i] = RGB_image2[j][256 - k][i];
+                    RGB_image2[j][256 - k][i] = RGB_image3[j][k][i];
+                }
+            }
+        }
+        for (int i = 0; i < RGB; ++i) {
+            for (int j = 0; j < SIZE; ++j) {
+                for (int k = 0; k < SIZE; ++k) {
+                    //copying the new image to the originl one
+                    RGB_image[j][k][i] = RGB_image2[j][k][i];
+                }
+            }
+        }
+    }
+}
+void Darken_Lighten(){
+    //to know which function to apply(darken or lighten)
+    cout<<"Do you want to (d)arken or (l)ighten? : ";
+    char b; cin>>b;
+    //if lighten
+    if (b == 'l') {
+        //like merge function but with a white image (all pixels are white = 255) we get the average of each color of a pixel from the image and a white pixel
+        for(int y=0 ; y<RGB ; y++) {
+            for (int i = 0; i < 256; i++) {
+                for (int j = 0; j < 256; j++) {
+                    RGB_image[i][j][y] = (RGB_image[i][j][y] + 256) / 2;
+                }
+            }
+        }
+    } else {
+        //like merge function but with a black image (all pixels are = 0), we get half the brightness of each color of a pixel
+        for(int y=0 ; y<RGB ; y++){
+            for(int i = 0; i < 256; i++) {
+                for (int j = 0; j < 256; j++) {
+                    RGB_image[i][j][y] = RGB_image[i][j][y] / 2;
+                }
+            }
+        }
+    }
+}
+
+void shrink(){
+    cout<<"Shrink to (1/2), (1/3) or (1/4)?: ";
+    string choice; cin>>choice;
+    if (choice == "1/2") {
+        for (int i = 0; i < SIZE/2; i++) {
+            for (int j = 0; j < SIZE/2; j++) {
+                RGB_image[i][j][0] = (RGB_image[i*2][j*2][0]);
+                RGB_image[i][j][1] = (RGB_image[i*2][j*2][1]);
+                RGB_image[i][j][2] = (RGB_image[i*2][j*2][2]);
+            }
+        }
+        for(int i=SIZE/2 ; i< SIZE ; i++ ){
+            for(int j=0 ; j<SIZE ;j++){
+                RGB_image[i][j][0] = 255;
+                RGB_image[i][j][1] = 255;
+                RGB_image[i][j][2] = 255;
+            }
+        }
+        for(int i=0 ; i< SIZE/2 ; i++ ){
+            for(int j=SIZE/2 ; j<SIZE ;j++){
+                RGB_image[i][j][0] = 255;
+                RGB_image[i][j][1] = 255;
+                RGB_image[i][j][2] = 255;
+            }
+        }
+    }else if(choice == "1/3"){
+        for (int i = 0; i < SIZE/3; i++) {
+            for (int j = 0; j < SIZE/3; j++) {
+                RGB_image[i][j][0] = (RGB_image[i*3][j*3][0]);
+                RGB_image[i][j][1] = (RGB_image[i*3][j*3][1]);
+                RGB_image[i][j][2] = (RGB_image[i*3][j*3][2]);
+            }
+        }
+        for(int i=SIZE/3 ; i< SIZE ; i++ ){
+            for(int j=0 ; j<SIZE ;j++){
+                RGB_image[i][j][0] = 255;
+                RGB_image[i][j][1] = 255;
+                RGB_image[i][j][2] = 255;
+            }
+        }
+        for(int i=0 ; i< SIZE/3 ; i++ ){
+            for(int j=SIZE/3 ; j<SIZE ;j++){
+                RGB_image[i][j][0] = 255;
+                RGB_image[i][j][1] = 255;
+                RGB_image[i][j][2] = 255;
+            }
+        }
+    }else{
+        for (int i = 0; i < SIZE/4; i++) {
+            for (int j = 0; j < SIZE/4; j++) {
+                RGB_image[i][j][0] = (RGB_image[i*4][j*4][0]);
+                RGB_image[i][j][1] = (RGB_image[i*4][j*4][1]);
+                RGB_image[i][j][2] = (RGB_image[i*4][j*4][2]);
+            }
+        }
+        for(int i=SIZE/4 ; i< SIZE ; i++ ){
+            for(int j=0 ; j<SIZE ;j++){
+                RGB_image[i][j][0] = 255;
+                RGB_image[i][j][1] = 255;
+                RGB_image[i][j][2] = 255;
+            }
+        }
+        for(int i=0 ; i< SIZE/4 ; i++ ){
+            for(int j=SIZE/4 ; j<SIZE ;j++){
+                RGB_image[i][j][0] = 255;
+                RGB_image[i][j][1] = 255;
+                RGB_image[i][j][2] = 255;
+            }
+        }
+    }
+}
+
+void detect() {
+    for (int i = 0; i < SIZE; i++) {
+        for (int j = 0; j < SIZE; j++) {
+            if ((abs(RGB_image[i + 1][j][0] - RGB_image[i][j][0]) > 35 && abs(RGB_image[i - 1][j][0] - RGB_image[i][j][0]) > 35) ||
+                (abs(RGB_image[i][j + 1][0] - RGB_image[i][j][0]) > 35 && abs(RGB_image[i][j - 1][0] - RGB_image[i][j][0]) > 35) ||
+                (abs(RGB_image[i + 1][j][1] - RGB_image[i][j][1]) > 35 && abs(RGB_image[i - 1][j][1] - RGB_image[i][j][1]) > 35) ||
+                (abs(RGB_image[i][j + 1][1] - RGB_image[i][j][1]) > 35 && abs(RGB_image[i][j - 1][1] - RGB_image[i][j][1]) > 35) ||
+                (abs(RGB_image[i + 1][j][2] - RGB_image[i][j][2]) > 35 && abs(RGB_image[i - 1][j][2] - RGB_image[i][j][2]) > 35) ||
+                (abs(RGB_image[i][j + 1][2] - RGB_image[i][j][2]) > 35 && abs(RGB_image[i][j - 1][2] - RGB_image[i][j][2]) > 35)) {
+                RGB_image[i][j][0] = 0;
+                RGB_image[i][j][1] = 0;
+                RGB_image[i][j][2] = 0;
+            } else {
+                RGB_image[i][j][0] = 255;
+                RGB_image[i][j][1] = 255;
+                RGB_image[i][j][2] = 255;
+            }
+        }
+    }
+}
+
+void Blur(){
+    for(int i=1 ; i<SIZE-1 ;i+=2){
+        for(int j=1 ; j<SIZE-1 ;j+=2) {
+            RGB_image[i][j][0] = (RGB_image[i-1][j-1][0] + RGB_image[i-1][j][0] + RGB_image[i-1][j+1][0] + RGB_image[i][j-1][0] + RGB_image[i][j+1][0] + RGB_image[i+1][j-1][0] + RGB_image[i+1][j][0] + RGB_image[i+1][j+1][0])/8;
+            RGB_image[i][j][1] = (RGB_image[i-1][j-1][1] + RGB_image[i-1][j][1] + RGB_image[i-1][j+1][1] + RGB_image[i][j-1][1] + RGB_image[i][j+1][1] + RGB_image[i+1][j-1][1] + RGB_image[i+1][j][1] + RGB_image[i+1][j+1][1])/8;
+            RGB_image[i][j][2] = (RGB_image[i-1][j-1][2] + RGB_image[i-1][j][2] + RGB_image[i-1][j+1][2] + RGB_image[i][j-1][2] + RGB_image[i][j+1][2] + RGB_image[i+1][j-1][2] + RGB_image[i+1][j][2] + RGB_image[i+1][j+1][2])/8;
+
+            RGB_image[i-1][j-1][0] = (RGB_image[i-1][j-1][0] + RGB_image[i-1][j][0] + RGB_image[i-1][j+1][0] + RGB_image[i][j-1][0] + RGB_image[i][j+1][0] + RGB_image[i+1][j-1][0] + RGB_image[i+1][j][0] + RGB_image[i+1][j+1][0])/8;
+            RGB_image[i-1][j-1][1] = (RGB_image[i-1][j-1][1] + RGB_image[i-1][j][1] + RGB_image[i-1][j+1][1] + RGB_image[i][j-1][1] + RGB_image[i][j+1][1] + RGB_image[i+1][j-1][1] + RGB_image[i+1][j][1] + RGB_image[i+1][j+1][1])/8;
+            RGB_image[i-1][j-1][2] = (RGB_image[i-1][j-1][2] + RGB_image[i-1][j][2] + RGB_image[i-1][j+1][2] + RGB_image[i][j-1][2] + RGB_image[i][j+1][2] + RGB_image[i+1][j-1][2] + RGB_image[i+1][j][2] + RGB_image[i+1][j+1][2])/8;
+
+            RGB_image[i-1][j][0] = (RGB_image[i-1][j-1][0] + RGB_image[i-1][j][0] + RGB_image[i-1][j+1][0] + RGB_image[i][j-1][0] + RGB_image[i][j+1][0] + RGB_image[i+1][j-1][0] + RGB_image[i+1][j][0] + RGB_image[i+1][j+1][0])/8;
+            RGB_image[i-1][j][1] = (RGB_image[i-1][j-1][1] + RGB_image[i-1][j][1] + RGB_image[i-1][j+1][1] + RGB_image[i][j-1][1] + RGB_image[i][j+1][1] + RGB_image[i+1][j-1][1] + RGB_image[i+1][j][1] + RGB_image[i+1][j+1][1])/8;
+            RGB_image[i-1][j][2] = (RGB_image[i-1][j-1][2] + RGB_image[i-1][j][2] + RGB_image[i-1][j+1][2] + RGB_image[i][j-1][2] + RGB_image[i][j+1][2] + RGB_image[i+1][j-1][2] + RGB_image[i+1][j][2] + RGB_image[i+1][j+1][2])/8;
+
+            RGB_image[i-1][j+1][0] = (RGB_image[i-1][j-1][0] + RGB_image[i-1][j][0] + RGB_image[i-1][j+1][0] + RGB_image[i][j-1][0] + RGB_image[i][j+1][0] + RGB_image[i+1][j-1][0] + RGB_image[i+1][j][0] + RGB_image[i+1][j+1][0])/8;
+            RGB_image[i-1][j+1][1] = (RGB_image[i-1][j-1][1] + RGB_image[i-1][j][1] + RGB_image[i-1][j+1][1] + RGB_image[i][j-1][1] + RGB_image[i][j+1][1] + RGB_image[i+1][j-1][1] + RGB_image[i+1][j][1] + RGB_image[i+1][j+1][1])/8;
+            RGB_image[i-1][j+1][2] = (RGB_image[i-1][j-1][2] + RGB_image[i-1][j][2] + RGB_image[i-1][j+1][2] + RGB_image[i][j-1][2] + RGB_image[i][j+1][2] + RGB_image[i+1][j-1][2] + RGB_image[i+1][j][2] + RGB_image[i+1][j+1][2])/8;
+
+            RGB_image[i][j-1][0] = (RGB_image[i-1][j-1][0] + RGB_image[i-1][j][0] + RGB_image[i-1][j+1][0] + RGB_image[i][j-1][0] + RGB_image[i][j+1][0] + RGB_image[i+1][j-1][0] + RGB_image[i+1][j][0] + RGB_image[i+1][j+1][0])/8;
+            RGB_image[i][j-1][1] = (RGB_image[i-1][j-1][1] + RGB_image[i-1][j][1] + RGB_image[i-1][j+1][1] + RGB_image[i][j-1][1] + RGB_image[i][j+1][1] + RGB_image[i+1][j-1][1] + RGB_image[i+1][j][1] + RGB_image[i+1][j+1][1])/8;
+            RGB_image[i][j-1][2] = (RGB_image[i-1][j-1][2] + RGB_image[i-1][j][2] + RGB_image[i-1][j+1][2] + RGB_image[i][j-1][2] + RGB_image[i][j+1][2] + RGB_image[i+1][j-1][2] + RGB_image[i+1][j][2] + RGB_image[i+1][j+1][2])/8;
+
+            RGB_image[i][j+1][0] = (RGB_image[i-1][j-1][0] + RGB_image[i-1][j][0] + RGB_image[i-1][j+1][0] + RGB_image[i][j-1][0] + RGB_image[i][j+1][0] + RGB_image[i+1][j-1][0] + RGB_image[i+1][j][0] + RGB_image[i+1][j+1][0])/8;
+            RGB_image[i][j+1][1] = (RGB_image[i-1][j-1][1] + RGB_image[i-1][j][1] + RGB_image[i-1][j+1][1] + RGB_image[i][j-1][1] + RGB_image[i][j+1][1] + RGB_image[i+1][j-1][1] + RGB_image[i+1][j][1] + RGB_image[i+1][j+1][1])/8;
+            RGB_image[i][j+1][2] = (RGB_image[i-1][j-1][2] + RGB_image[i-1][j][2] + RGB_image[i-1][j+1][2] + RGB_image[i][j-1][2] + RGB_image[i][j+1][2] + RGB_image[i+1][j-1][2] + RGB_image[i+1][j][2] + RGB_image[i+1][j+1][2])/8;
+
+            RGB_image[i+1][j-1][0] = (RGB_image[i-1][j-1][0] + RGB_image[i-1][j][0] + RGB_image[i-1][j+1][0] + RGB_image[i][j-1][0] + RGB_image[i][j+1][0] + RGB_image[i+1][j-1][0] + RGB_image[i+1][j][0] + RGB_image[i+1][j+1][0])/8;
+            RGB_image[i+1][j-1][1] = (RGB_image[i-1][j-1][1] + RGB_image[i-1][j][1] + RGB_image[i-1][j+1][1] + RGB_image[i][j-1][1] + RGB_image[i][j+1][1] + RGB_image[i+1][j-1][1] + RGB_image[i+1][j][1] + RGB_image[i+1][j+1][1])/8;
+            RGB_image[i+1][j-1][2] = (RGB_image[i-1][j-1][2] + RGB_image[i-1][j][2] + RGB_image[i-1][j+1][2] + RGB_image[i][j-1][2] + RGB_image[i][j+1][2] + RGB_image[i+1][j-1][2] + RGB_image[i+1][j][2] + RGB_image[i+1][j+1][2])/8;
+
+            RGB_image[i+1][j][0] = (RGB_image[i-1][j-1][0] + RGB_image[i-1][j][0] + RGB_image[i-1][j+1][0] + RGB_image[i][j-1][0] + RGB_image[i][j+1][0] + RGB_image[i+1][j-1][0] + RGB_image[i+1][j][0] + RGB_image[i+1][j+1][0])/8;
+            RGB_image[i+1][j][1] = (RGB_image[i-1][j-1][1] + RGB_image[i-1][j][1] + RGB_image[i-1][j+1][1] + RGB_image[i][j-1][1] + RGB_image[i][j+1][1] + RGB_image[i+1][j-1][1] + RGB_image[i+1][j][1] + RGB_image[i+1][j+1][1])/8;
+            RGB_image[i+1][j][2] = (RGB_image[i-1][j-1][2] + RGB_image[i-1][j][2] + RGB_image[i-1][j+1][2] + RGB_image[i][j-1][2] + RGB_image[i][j+1][2] + RGB_image[i+1][j-1][2] + RGB_image[i+1][j][2] + RGB_image[i+1][j+1][2])/8;
+
+            RGB_image[i+1][j+1][0] = (RGB_image[i-1][j-1][0] + RGB_image[i-1][j][0] + RGB_image[i-1][j+1][0] + RGB_image[i][j-1][0] + RGB_image[i][j+1][0] + RGB_image[i+1][j-1][0] + RGB_image[i+1][j][0] + RGB_image[i+1][j+1][0])/8;
+            RGB_image[i+1][j+1][1] = (RGB_image[i-1][j-1][1] + RGB_image[i-1][j][1] + RGB_image[i-1][j+1][1] + RGB_image[i][j-1][1] + RGB_image[i][j+1][1] + RGB_image[i+1][j-1][1] + RGB_image[i+1][j][1] + RGB_image[i+1][j+1][1])/8;
+            RGB_image[i+1][j+1][2] = (RGB_image[i-1][j-1][2] + RGB_image[i-1][j][2] + RGB_image[i-1][j+1][2] + RGB_image[i][j-1][2] + RGB_image[i][j+1][2] + RGB_image[i+1][j-1][2] + RGB_image[i+1][j][2] + RGB_image[i+1][j+1][2])/8;
+
+        }
+    }
+}
